@@ -1,0 +1,8 @@
+/build/
+/.devcontainer/
+/.vscode/
+/components/lvgl/
+sdkconfig.ci
+sdkconfig.old
+dependencies.lock
+example_test.py
