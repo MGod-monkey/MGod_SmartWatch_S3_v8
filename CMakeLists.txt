@@ -3,4 +3,4 @@
 cmake_minimum_required(VERSION 3.5)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(MRB_SmartWatch_S3)
+project(MGod_SmartWatch_S3_v8)

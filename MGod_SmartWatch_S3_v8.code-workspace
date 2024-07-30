@@ -11,7 +11,19 @@
 			"*.wxs": "javascript",
 			"*.php": "php",
 			"*.py": "python",
-			"stdbool.h": "c"
+			"stdbool.h": "c",
+			"wfb_resized.h": "c",
+			"*.tcc": "cpp",
+			"night_mode.h": "c",
+			"dial_dog.h": "c",
+			"analog_nike.h": "c",
+			"analog_starcraft2.h": "c",
+			"dial_astronaut.h": "c",
+			"dial_astronaut3.h": "c",
+			"dial_blackboard.h": "c",
+			"dial_filled.h": "c",
+			"dial_lockscreen.h": "c",
+			"dial_oldperson.h": "c"
 		}
 	}
 }

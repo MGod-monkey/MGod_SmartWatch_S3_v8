@@ -13,9 +13,9 @@
 #endif
 
 #if 1
-	#define hint_debug(format, ...) lv_project_debug("[提示]- ",format,##__VA_ARGS__);
+	#define lv_hint_debug(format, ...) lv_project_debug("[提示]- ",format,##__VA_ARGS__);
 #else
-	#define hint_debug(format, ...) ;
+	#define lv_hint_debug(format, ...) ;
 #endif
 
 typedef struct
