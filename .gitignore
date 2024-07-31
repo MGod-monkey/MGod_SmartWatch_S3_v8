@@ -1,4 +1,5 @@
 /build/
+/CMakeFiles/
 /.devcontainer/
 /.vscode/
 /components/lvgl/
