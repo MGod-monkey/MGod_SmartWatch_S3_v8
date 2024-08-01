@@ -21,18 +21,31 @@
 #include "lv_port_indev.h"
 #include "lv_game_2048.h"
 #include "lv_project.h"
-
+#include "system_time.h"
+#include "main.h"
+// #include <dos.h>
 
 // #include "lv_demos.h"
 LV_IMG_DECLARE(bmp_tianqi_40x40_0)
 void app_main(void)
 {
     // printf("Hello world!\n");
+    // esp_log_set_vprintf(custom_vprintf);
     lv_init();
     lv_port_disp_init();
     lv_port_indev_init();
     watchface_init();
+    
+    
+    wifi_init_sta();
+    if (!obtain_time())
+        load_time_from_nvs();  // 从NVS中加载时间
 
+    // // 如果时间未同步过，执行SNTP同步
+    // if (timeinfo.tm_year < (2023 - 1900)) {
+    //     obtain_time();
+    // }
+    // system_time_print();  // 打印时间
     // watch.setConnectionCallback(connectionCallback);
     // watch.setNotificationCallback(notificationCallback);
     // watch.setConfigurationCallback(configCallback);
@@ -52,45 +65,8 @@ void app_main(void)
     while(1)
     {
         lv_task_handler();
+        watchface_update();
         lv_tick_inc(10);
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
-
-// void update_faces()
-// {
-//   int second = watch.getSecond();
-//   int minute = watch.getMinute();
-//   int hour = watch.getHourC();
-//   bool mode = watch.is24Hour();
-//   bool am = watch.getHour(true) < 12;
-//   int day = watch.getDay();
-//   int month = watch.getMonth() + 1;
-//   int year = watch.getYear();
-//   int weekday = watch.getDayofWeek();
-
-//   int temp = watch.getWeatherAt(0).temp;
-//   int icon = watch.getWeatherAt(0).icon;
-
-//   int battery = watch.getPhoneBattery();
-//   int connection = watch.isConnected();
-
-//   int steps = 2735;
-//   int distance = 17;
-//   int kcal = 348;
-//   int bpm = 76;
-//   int oxygen = 97;
-
-//   update_check_34_2_dial(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
-//   update_check_analog(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
-//   update_check_blue_dial(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
-//   update_check_116_2_dial(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
-//   update_check_756_2_dial(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
-//   update_check_b_w_resized(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
-//   update_check_kenya(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
-//   update_check_pixel_resized(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
-//   update_check_radar(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
-//   update_check_smart_resized(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
-//   update_check_tix_resized(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
-//   update_check_wfb_resized(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
-// }

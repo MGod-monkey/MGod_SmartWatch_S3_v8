@@ -240,9 +240,6 @@ void bsp_ledc_init(void)
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
     // Set duty to 50%
     bsp_ledc_set_duty(5);
-    // Update duty to apply the new value
-    printf("led init\n");
-
 }
 
 

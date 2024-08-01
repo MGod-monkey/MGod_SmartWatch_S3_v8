@@ -6,6 +6,7 @@
 /esp-idf/
 /bootloader-prefix/
 /components/lvgl/
+/config/
 build.ninja
 app-flash_args
 cmake_install.cmake

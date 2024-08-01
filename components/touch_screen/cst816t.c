@@ -1,4 +1,5 @@
 #include "cst816t.h"
+#include "main.h"
 // #include "bsp_i2c.h"
 
 uint8_t cst816t_read_len(uint16_t reg_addr, uint8_t *data, uint8_t len)
@@ -21,15 +22,15 @@ uint8_t cst816t_register_write_byte(uint8_t reg_addr, uint8_t data)
 
 
 uint8_t cst816t_chipId(void)
-{ uint8_t id=0;
+{ 
+    uint8_t id=0;
     uint8_t res = 0;
     res = cst816t_read_len(0xA7, &id,1);
-
-    cst816t_debug( "touch chip: CST816T======%d===========%d\r\n",id,res);
-
+    log_printf("CST816T", LOG_DEBUG, "touch chip: CST816T======%d===========%d",id,res);
 
     return 0;
 }
+
 static esp_err_t cst816t_get_touch_points_num(uint8_t *touch_points_num)
 {
     uint8_t res = 0;
@@ -75,11 +76,11 @@ void cst816t_test_task(void *pvParameter)
         res = cst816t_read_pos(&touch_points_num, &x, &y);
         if (res == ESP_OK)
         {
-            cst816t_debug("成功 点数:%d X:%d Y:%d \r\n", touch_points_num, x, y);
+            log_printf("CST816T", LOG_DEBUG, "success point:%d X:%d Y:%d ", touch_points_num, x, y);
         }
         else
         {
-            cst816t_debug("失败 点数:%d X:%d Y:%d \r\n",touch_points_num,x,y);
+            log_printf("CST816T", LOG_DEBUG, "failure point:%d X:%d Y:%d ",touch_points_num, x, y);
         }
 
         vTaskDelay(pdMS_TO_TICKS(100));

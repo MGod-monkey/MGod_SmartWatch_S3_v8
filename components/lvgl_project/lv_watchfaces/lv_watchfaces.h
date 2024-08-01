@@ -17,16 +17,7 @@
 #include "./dial_oldperson/dial_oldperson.h"
 #include "./dial_rabbit/dial_rabbit.h"
 
-#if 1
-	#define lv_watchface_debug(format, ...) lv_project_debug("[表盘]- ",format,##__VA_ARGS__);
-#else
-	#define lv_watchface_debug(format, ...);
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+static const char *WATCHFACE_TAG = "表盘";
 #define LV_WATCHFACES_MAX_FACES 15
 lv_obj_t *ui_faceSelect;
 lv_obj_t *ui_watchface;
@@ -139,7 +130,7 @@ void registerWatchface_cb(const char *name, const lv_img_dsc_t *preview, lv_obj_
     faces[numFaces].preview = preview;
     faces[numFaces].watchface = watchface;
     addWatchface(faces[numFaces].name, faces[numFaces].preview, numFaces);
-    lv_watchface_debug("添加表盘: %s\r\n", faces[numFaces].name);
+    log_printf(WATCHFACE_TAG, LOG_DEBUG, "add watchface: %s", faces[numFaces].name);
     numFaces++;
 }
 

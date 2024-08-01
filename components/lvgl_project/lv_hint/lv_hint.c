@@ -6,7 +6,7 @@ lv_style_t lv_tishi_style;
 static void lv_hint_event_cb(lv_event_t * e)
 {
     // lv_obj_t * obj = lv_event_get_target(e);
-	lv_hint_debug("删除窗口\r\n");
+	log_printf(HINT_TAG, LOG_DEBUG, "close hint window");
 	lv_hint_close();
 }
 
@@ -45,8 +45,7 @@ void lv_hint_create(lv_obj_t * scr, const char *text, uint8_t touming, uint8_t d
 
     if (delay != 0)
         hint.lv_task = lv_timer_create(lv_hint_taskCb, delay*1000, &hint); //创建定时器
-    lv_hint_debug("创建窗口\r\n");
-
+    log_printf(HINT_TAG, LOG_DEBUG, "create hint window");
 	lv_obj_add_flag(hint.lv_hint, LV_OBJ_FLAG_FLOATING); // 置顶
 
 	lv_hint_anim_jin();
@@ -60,7 +59,7 @@ void lv_hint_taskCb(lv_timer_t *t)
 void lv_hint_close(void)
 {
 	lv_hint_anim_chu();
-	lv_hint_debug("关闭窗口\r\n");
+    log_printf(HINT_TAG, LOG_DEBUG, "close hint window");
 	lv_timer_del(hint.lv_task);
 	hint.lv_task = NULL;
     lv_obj_del_async(hint.lv_hint);

@@ -10,7 +10,7 @@
 #include "time.h"
 #include "nvs.h"
 
-static const char *TAG = "system_time";
+static const char *SYSTEMTIME_TAG = "system_time";
 
 #define WIFI_SSID      "INSS-Lab_2.4G"
 #define WIFI_PASS      "G-STAR1211"

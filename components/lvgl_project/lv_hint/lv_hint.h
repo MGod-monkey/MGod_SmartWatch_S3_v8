@@ -5,18 +5,7 @@
 #include "main.h"
 // #include "lv_Project.h"
 // #include "my_system.h"
-
-#if 1
-	#define lv_hint_anim_debug(format, ...) lv_project_debug("[提示-动效]- ",format,##__VA_ARGS__);
-#else
-	#define lv_hint_anim_debug(format, ...);
-#endif
-
-#if 1
-	#define lv_hint_debug(format, ...) lv_project_debug("[提示]- ",format,##__VA_ARGS__);
-#else
-	#define lv_hint_debug(format, ...) ;
-#endif
+static const char *HINT_TAG = "lv_hint";
 
 typedef struct
 {

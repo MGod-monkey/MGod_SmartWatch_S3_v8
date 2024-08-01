@@ -1,16 +1,18 @@
 #include "system_time.h"
+#include "main.h"
 
 struct tm timeinfo = { 0 };
+
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         esp_wifi_connect();
-        ESP_LOGI(TAG, "retry to connect to the AP");
+        log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "retry to connect to the AP");
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        ESP_LOGI(TAG, "got ip:%s", ip4addr_ntoa(&event->ip_info.ip));
+        log_printf(SYSTEMTIME_TAG, LOG_INFO, "got ip:%s", ip4addr_ntoa(&event->ip_info.ip));
     }
 }
 
@@ -30,7 +32,7 @@ void wifi_init_sta(void)
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
+    esp_log_level_set("wifi", ESP_LOG_ERROR);
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
@@ -53,10 +55,10 @@ void wifi_init_sta(void)
     };
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
-    ESP_ERROR_CHECK(esp_wifi_start() );
+    ESP_ERROR_CHECK(esp_wifi_start());
 
-    ESP_LOGI(TAG, "wifi_init_sta finished.");
-    ESP_LOGI(TAG, "connect to ap SSID:%s password:%s", WIFI_SSID, WIFI_PASS);
+    log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "wifi_init_sta finished.");
+    log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "connect to ap SSID:%s password:%s", WIFI_SSID, WIFI_PASS);
 }
 
 static void update_timeinfo(void) {
@@ -67,8 +69,6 @@ static void update_timeinfo(void) {
 
 void time_sync_notification_cb(struct timeval *tv)
 {
-    ESP_LOGI(TAG, "Notification of a time synchronization event");
-
     // Save time to NVS
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvs_handle);
@@ -78,19 +78,19 @@ void time_sync_notification_cb(struct timeval *tv)
         err = nvs_set_i64(nvs_handle, "last_sync_time", now);
         if (err == ESP_OK) {
             nvs_commit(nvs_handle);
-            ESP_LOGI(TAG, "Time saved to NVS");
+            log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "Time saved to NVS");
         } else {
-            ESP_LOGE(TAG, "Failed to save time to NVS");
+            log_printf(SYSTEMTIME_TAG, LOG_ERROR, "Failed to save time to NVS");
         }
         nvs_close(nvs_handle);
     } else {
-        ESP_LOGE(TAG, "Failed to open NVS");
+        log_printf(SYSTEMTIME_TAG, LOG_ERROR, "Failed to open NVS");
     }
 }
 
 void initialize_sntp(void)
 {
-    ESP_LOGI(TAG, "Initializing SNTP");
+    log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "Initializing SNTP");
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
     sntp_setservername(0, "ntp.aliyun.com");
     sntp_setservername(1, "cn.pool.ntp.org");
@@ -108,17 +108,17 @@ bool obtain_time(void)
     int retry = 0;
     const int retry_count = 10;
     while (timeinfo.tm_year < (2022 - 1900) && ++retry < retry_count) {
-        ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+        log_printf(SYSTEMTIME_TAG, LOG_WARN, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
         vTaskDelay(2000 / portTICK_PERIOD_MS);
         time(&now);
         localtime_r(&now, &timeinfo);
     }
 
     if (retry == retry_count) {
-        ESP_LOGI(TAG, "Failed to obtain time");
+        log_printf(SYSTEMTIME_TAG, LOG_ERROR, "Failed to obtain time");
         return false;
     } else {
-        ESP_LOGI(TAG, "Time is set... %s", asctime(&timeinfo));
+        log_printf(SYSTEMTIME_TAG, LOG_INFO, "Time is set to: %s", asctime(&timeinfo));
         return true;
     }
 }
@@ -135,14 +135,15 @@ bool load_time_from_nvs(void)
                 .tv_sec = (time_t)last_sync_time,
             };
             settimeofday(&tv, NULL);
-            ESP_LOGI(TAG, "Time loaded from NVS");
+            log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "Time loaded from NVS");
         } else {
-            ESP_LOGI(TAG, "No time found in NVS");
+            log_printf(SYSTEMTIME_TAG, LOG_ERROR, "No time found in NVS");
         }
         nvs_close(nvs_handle);
         return true;
     } else {
-        ESP_LOGE(TAG, "Failed to open NVS");
+
+        log_printf(SYSTEMTIME_TAG, LOG_ERROR, "Failed to open NVS");
         return false;
     }
     // 设置时区
@@ -210,7 +211,7 @@ int system_time_get_yearday(void)
 void system_time_print(void)
 {
     update_timeinfo();
-    printf("%4d年%02d月%02d日 %02d:%02d:%02d\n", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour+8, timeinfo.tm_min, timeinfo.tm_sec);
+    printf("当前时间：%4d年%02d月%02d日 %02d:%02d:%02d\n", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 }
 
 void system_time_format_print(const char* format)
@@ -260,5 +261,5 @@ void system_time_format_print(const char* format)
     }
 
     buffer[pos] = '\0';
-    printf("%s\n", buffer);
+    printf("当前时间：%s\n", buffer);
 }
