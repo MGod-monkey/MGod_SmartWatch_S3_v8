@@ -14,7 +14,7 @@ extern "C"
 
 #include "lvgl.h"
 
-// #define ENABLE_FACE_DIAL_RABBIT // (dial rabbit) uncomment to enable or define it elsewhere
+#define ENABLE_FACE_DIAL_RABBIT // (dial rabbit) uncomment to enable or define it elsewhere
 
 #ifdef ENABLE_FACE_DIAL_RABBIT
     extern lv_obj_t *face_dial_rabbit;

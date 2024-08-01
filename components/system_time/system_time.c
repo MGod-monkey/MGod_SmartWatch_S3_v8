@@ -5,11 +5,13 @@ struct tm timeinfo = { 0 };
 
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
-        esp_wifi_connect();
-    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        esp_wifi_connect();
-        log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "retry to connect to the AP");
+    if (event_base == WIFI_EVENT) {
+        if (event_id == WIFI_EVENT_STA_START) {
+            esp_wifi_connect();
+        } else if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
+            esp_wifi_connect();
+            log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "retry to connect to the AP");
+        }
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         log_printf(SYSTEMTIME_TAG, LOG_INFO, "got ip:%s", ip4addr_ntoa(&event->ip_info.ip));
@@ -33,6 +35,7 @@ void wifi_init_sta(void)
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     esp_log_level_set("wifi", ESP_LOG_ERROR);
+
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
@@ -53,8 +56,8 @@ void wifi_init_sta(void)
             .threshold.authmode = WIFI_AUTH_WPA2_PSK,
         },
     };
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 
     log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "wifi_init_sta finished.");
@@ -69,23 +72,23 @@ static void update_timeinfo(void) {
 
 void time_sync_notification_cb(struct timeval *tv)
 {
-    // Save time to NVS
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvs_handle);
-    if (err == ESP_OK) {
-        time_t now;
-        time(&now);
-        err = nvs_set_i64(nvs_handle, "last_sync_time", now);
-        if (err == ESP_OK) {
-            nvs_commit(nvs_handle);
-            log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "Time saved to NVS");
-        } else {
-            log_printf(SYSTEMTIME_TAG, LOG_ERROR, "Failed to save time to NVS");
-        }
-        nvs_close(nvs_handle);
-    } else {
+    if (err != ESP_OK) {
         log_printf(SYSTEMTIME_TAG, LOG_ERROR, "Failed to open NVS");
+        return;
     }
+
+    time_t now;
+    time(&now);
+    err = nvs_set_i64(nvs_handle, "last_sync_time", now);
+    if (err != ESP_OK) {
+        log_printf(SYSTEMTIME_TAG, LOG_ERROR, "Failed to save time to NVS");
+    } else {
+        nvs_commit(nvs_handle);
+        log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "Time saved to NVS");
+    }
+    nvs_close(nvs_handle);
 }
 
 void initialize_sntp(void)
@@ -103,7 +106,6 @@ bool obtain_time(void)
 {
     initialize_sntp();
 
-    // 等待时间同步
     time_t now = 0;
     int retry = 0;
     const int retry_count = 10;
@@ -118,12 +120,8 @@ bool obtain_time(void)
         log_printf(SYSTEMTIME_TAG, LOG_ERROR, "Failed to obtain time");
         return false;
     } else {
-        // 设置时区
         setenv("TZ", "CST-8", 1);
         tzset();
-        time_t now;
-        time(&now);
-        localtime_r(&now, &timeinfo);
         log_printf(SYSTEMTIME_TAG, LOG_INFO, "Time is set to: %s", asctime(&timeinfo));
         return true;
     }
@@ -133,31 +131,25 @@ bool load_time_from_nvs(void)
 {
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvs_handle);
-    if (err == ESP_OK) {
-        int64_t last_sync_time = 0;
-        err = nvs_get_i64(nvs_handle, "last_sync_time", &last_sync_time);
-        if (err == ESP_OK) {
-            struct timeval tv = {
-                .tv_sec = (time_t)last_sync_time,
-            };
-            settimeofday(&tv, NULL);
-            log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "Time loaded from NVS");
-        } else {
-            log_printf(SYSTEMTIME_TAG, LOG_ERROR, "No time found in NVS");
-        }
-        nvs_close(nvs_handle);
-        return true;
-    } else {
-
+    if (err != ESP_OK) {
         log_printf(SYSTEMTIME_TAG, LOG_ERROR, "Failed to open NVS");
         return false;
     }
-    // 设置时区
+
+    int64_t last_sync_time = 0;
+    err = nvs_get_i64(nvs_handle, "last_sync_time", &last_sync_time);
+    if (err != ESP_OK) {
+        log_printf(SYSTEMTIME_TAG, LOG_ERROR, "No time found in NVS");
+    } else {
+        struct timeval tv = { .tv_sec = (time_t)last_sync_time };
+        settimeofday(&tv, NULL);
+        log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "Time loaded from NVS");
+    }
+    nvs_close(nvs_handle);
+
     setenv("TZ", "CST-8", 1);
     tzset();
-    time_t now;
-    time(&now);
-    localtime_r(&now, &timeinfo);
+    return true;
 }
 
 struct tm system_time_get_timeinfo(void)
@@ -181,7 +173,7 @@ int system_time_get_minute(void)
 int system_time_get_hour(void)
 {
     update_timeinfo();
-    return timeinfo.tm_hour+8;
+    return timeinfo.tm_hour;
 }
 
 int system_time_get_day(void)
@@ -193,13 +185,13 @@ int system_time_get_day(void)
 int system_time_get_month(void)
 {
     update_timeinfo();
-    return timeinfo.tm_mon+1;
+    return timeinfo.tm_mon + 1;
 }
 
 int system_time_get_year(void)
 {
     update_timeinfo();
-    return timeinfo.tm_year;
+    return timeinfo.tm_year + 1900;
 }
 
 int system_time_get_weekday(void)
@@ -222,46 +214,25 @@ void system_time_print(void)
 
 void system_time_format_print(const char* format)
 {
-    update_timeinfo();  // 确保获取最新时间
+    update_timeinfo();
     char buffer[256];
     int pos = 0;
 
-    for (const char *p = format; *p != '\0'; ++p)
-    {
-        if (*p == '%')
-        {
-            ++p;  // Skip '%'
-            if (*p == '\0')
-                break;
+    for (const char *p = format; *p != '\0'; ++p) {
+        if (*p == '%') {
+            ++p;
+            if (*p == '\0') break;
 
-            switch (*p)
-            {
-                case 'Y':  // 年份
-                    pos += sprintf(buffer + pos, "%d", timeinfo.tm_year + 1900);
-                    break;
-                case 'M':  // 月份
-                    pos += sprintf(buffer + pos, "%02d", timeinfo.tm_mon + 1);
-                    break;
-                case 'D':  // 天数
-                    pos += sprintf(buffer + pos, "%02d", timeinfo.tm_mday);
-                    break;
-                case 'h':  // 小时
-                    pos += sprintf(buffer + pos, "%02d", timeinfo.tm_hour);
-                    break;
-                case 'm':  // 分钟
-                    pos += sprintf(buffer + pos, "%02d", timeinfo.tm_min);
-                    break;
-                case 's':  // 秒
-                    pos += sprintf(buffer + pos, "%02d", timeinfo.tm_sec);
-                    break;
-                default:
-                    buffer[pos++] = '%';
-                    buffer[pos++] = *p;
-                    break;
+            switch (*p) {
+                case 'Y': pos += sprintf(buffer + pos, "%d", timeinfo.tm_year + 1900); break;
+                case 'M': pos += sprintf(buffer + pos, "%02d", timeinfo.tm_mon + 1); break;
+                case 'D': pos += sprintf(buffer + pos, "%02d", timeinfo.tm_mday); break;
+                case 'h': pos += sprintf(buffer + pos, "%02d", timeinfo.tm_hour); break;
+                case 'm': pos += sprintf(buffer + pos, "%02d", timeinfo.tm_min); break;
+                case 's': pos += sprintf(buffer + pos, "%02d", timeinfo.tm_sec); break;
+                default: buffer[pos++] = '%'; buffer[pos++] = *p; break;
             }
-        }
-        else
-        {
+        } else {
             buffer[pos++] = *p;
         }
     }
