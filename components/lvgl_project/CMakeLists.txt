@@ -13,8 +13,8 @@ idf_component_register(SRC_DIRS
                         "lv_watchfaces/dial_astronaut/assets"
                         "lv_watchfaces/dial_astronaut2"
                         "lv_watchfaces/dial_astronaut2/assets"
-                        "lv_watchfaces/dial_astronaut3"
-                        "lv_watchfaces/dial_astronaut3/assets"
+                        # "lv_watchfaces/dial_astronaut3"
+                        # "lv_watchfaces/dial_astronaut3/assets"
                         "lv_watchfaces/dial_dog"
                         "lv_watchfaces/dial_dog/assets"
                         "lv_watchfaces/dial_filled"
@@ -36,7 +36,7 @@ idf_component_register(SRC_DIRS
                         "lv_watchfaces/analog_starcraft2"
                         "lv_watchfaces/dial_astronaut"
                         "lv_watchfaces/dial_astronaut2"
-                        "lv_watchfaces/dial_astronaut3"
+                        # "lv_watchfaces/dial_astronaut3"
                         "lv_watchfaces/dial_dog"
                         "lv_watchfaces/dial_filled"
                         "lv_watchfaces/dial_lockscreen/"
@@ -45,5 +45,5 @@ idf_component_register(SRC_DIRS
                         "lv_watchfaces/dial_blackboard"
                         "lv_game_2048"
                         "lv_hint"
-                        REQUIRES main lvgl_porting
+                        REQUIRES main lvgl_porting system_time
                       )

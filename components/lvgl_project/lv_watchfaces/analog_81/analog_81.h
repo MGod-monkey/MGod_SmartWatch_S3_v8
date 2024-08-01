@@ -14,7 +14,7 @@ extern "C"
 
 #include "lvgl.h"
 
-#define ENABLE_FACE_ANALOG_81 // (analog 81) uncomment to enable or define it elsewhere
+// #define ENABLE_FACE_ANALOG_81 // (analog 81) uncomment to enable or define it elsewhere
 
 #ifdef ENABLE_FACE_ANALOG_81
     extern lv_obj_t *face_analog_81;

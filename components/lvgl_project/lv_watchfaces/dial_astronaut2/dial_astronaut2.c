@@ -630,6 +630,8 @@ void update_time_dial_astronaut2(int second, int minute, int hour, bool mode, bo
 	lv_img_set_src(face_dial_astronaut2_51_4682, face_dial_astronaut2_dial_img_50_4682_group[(hour / 10) % 10]);
 	lv_img_set_src(face_dial_astronaut2_52_4682, face_dial_astronaut2_dial_img_50_4682_group[(minute / 1) % 10]);
 	lv_img_set_src(face_dial_astronaut2_53_4682, face_dial_astronaut2_dial_img_50_4682_group[(minute / 10) % 10]);
+	lv_img_set_src(face_dial_astronaut2_54_4682, face_dial_astronaut2_dial_img_50_4682_group[(second / 1) % 10]);
+	lv_img_set_src(face_dial_astronaut2_55_4682, face_dial_astronaut2_dial_img_50_4682_group[(second / 10) % 10]);
 
 #endif
 }

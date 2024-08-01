@@ -3,12 +3,13 @@
 
 #include "lvgl.h"
 #include "main.h"
+#include "system_time.h"
 #include "./analog_81/analog_81.h"
 #include "./analog_nike/analog_nike.h"
 #include "./analog_starcraft2/analog_starcraft2.h"
 #include "./dial_astronaut/dial_astronaut.h"
 #include "./dial_astronaut2/dial_astronaut2.h"
-#include "./dial_astronaut3/dial_astronaut3.h"
+// #include "./dial_astronaut3/dial_astronaut3.h"
 #include "./dial_blackboard/dial_blackboard.h"
 #include "./dial_dog/dial_dog.h"
 #include "./dial_filled/dial_filled.h"
@@ -153,7 +154,7 @@ void watchface_init()
     init_face_select();
     init_face_dial_astronaut(registerWatchface_cb);
     init_face_dial_astronaut2(registerWatchface_cb);
-    init_face_dial_astronaut3(registerWatchface_cb);
+    // init_face_dial_astronaut3(registerWatchface_cb);
     init_face_dial_blackboard(registerWatchface_cb);
     // init_face_dial_dog(registerWatchface_cb);
     init_face_dial_filled(registerWatchface_cb);
@@ -182,6 +183,41 @@ void watchface_init()
     }
 
     lv_disp_load_scr(ui_watchface);
+}
+
+void watchface_update()
+{
+    int second = system_time_get_second();
+    int minute = system_time_get_minute();
+    int hour = system_time_get_hour();
+    bool mode = 1;
+    bool am = hour < 12;
+    int day = system_time_get_day();
+    int month = system_time_get_month();
+    int year = system_time_get_year();
+    int weekday = system_time_get_weekday();
+
+    int temp = 0;
+    int icon = 0;
+
+    int battery = 69;
+    int connection = 1;
+
+    int steps = 2735;
+    int distance = 17;
+    int kcal = 348;
+    int bpm = 76;
+    int oxygen = 97;
+
+    update_check_analog_81(ui_watchface, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+    update_check_analog_starcraft2(ui_watchface, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+    update_check_dial_astronaut(ui_watchface, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+    update_check_dial_astronaut2(ui_watchface, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+    update_check_dial_blackboard(ui_watchface, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+    update_check_dial_filled(ui_watchface, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+    update_check_dial_lockscreen(ui_watchface, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+    update_check_dial_oldperson(ui_watchface, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+    update_check_dial_rabbit(ui_watchface, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
 }
 
 #ifdef __cplusplus
