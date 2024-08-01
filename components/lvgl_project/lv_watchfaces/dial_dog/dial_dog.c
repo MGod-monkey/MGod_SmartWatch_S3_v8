@@ -157,7 +157,7 @@ const lv_img_dsc_t *face_dial_dog_dial_img_36_187118_group[] = {
 
 #endif
 
-void init_face_dial_dog(void (*callback)(const char*, const lv_img_dsc_t *, lv_obj_t **)){
+void init_face_dial_dog(void (*callback)(const char *name, const lv_img_dsc_t *preview, lv_obj_t **watchface, int anim_img_num, lv_obj_t *anim_img, const lv_img_dsc_t **anim_img_group)){
 #ifdef ENABLE_FACE_DIAL_DOG
     face_dial_dog = lv_obj_create(NULL);
     lv_obj_clear_flag(face_dial_dog, LV_OBJ_FLAG_SCROLLABLE);
@@ -478,8 +478,8 @@ void init_face_dial_dog(void (*callback)(const char*, const lv_img_dsc_t *, lv_o
     lv_obj_add_flag(face_dial_dog_36_187118, LV_OBJ_FLAG_ADV_HITTEST );
     lv_obj_clear_flag(face_dial_dog_36_187118, LV_OBJ_FLAG_SCROLLABLE );
 
-
-    callback("dial dog", &face_dial_dog_dial_img_preview_0, &face_dial_dog);
+    int anim_img_num = sizeof(face_dial_dog_dial_img_1_72547_group) / sizeof(face_dial_dog_dial_img_1_72547_group[0]);
+    callback("dial dog", &face_dial_dog_dial_img_preview_0, &face_dial_dog, anim_img_num, face_dial_dog_1_72547, face_dial_dog_dial_img_1_72547_group);
 
 #endif
 }

@@ -73,7 +73,7 @@ const lv_img_dsc_t *face_dial_lockscreen_dial_img_5_82534_group[] = {
 
 #endif
 
-void init_face_dial_lockscreen(void (*callback)(const char*, const lv_img_dsc_t *, lv_obj_t **)){
+void init_face_dial_lockscreen(void (*callback)(const char *name, const lv_img_dsc_t *preview, lv_obj_t **watchface, int anim_img_num, lv_obj_t *anim_img, const lv_img_dsc_t **anim_img_group)){
 #ifdef ENABLE_FACE_DIAL_LOCKSCREEN
     face_dial_lockscreen = lv_obj_create(NULL);
     lv_obj_clear_flag(face_dial_lockscreen, LV_OBJ_FLAG_SCROLLABLE);
@@ -161,7 +161,7 @@ void init_face_dial_lockscreen(void (*callback)(const char*, const lv_img_dsc_t 
     lv_obj_clear_flag(face_dial_lockscreen_8_82534, LV_OBJ_FLAG_SCROLLABLE );
 
 
-    callback("dial lockscreen", &face_dial_lockscreen_dial_img_preview_0, &face_dial_lockscreen);
+    callback("dial lockscreen", &face_dial_lockscreen_dial_img_preview_0, &face_dial_lockscreen, 0, NULL, NULL);
 
 #endif
 }

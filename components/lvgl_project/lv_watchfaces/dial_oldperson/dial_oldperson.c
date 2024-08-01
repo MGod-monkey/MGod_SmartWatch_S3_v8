@@ -108,7 +108,7 @@ const lv_img_dsc_t *face_dial_oldperson_dial_img_11_188858_group[] = {
 
 #endif
 
-void init_face_dial_oldperson(void (*callback)(const char*, const lv_img_dsc_t *, lv_obj_t **)){
+void init_face_dial_oldperson(void (*callback)(const char *name, const lv_img_dsc_t *preview, lv_obj_t **watchface, int anim_img_num, lv_obj_t *anim_img, const lv_img_dsc_t **anim_img_group)){
 #ifdef ENABLE_FACE_DIAL_OLDPERSON
     face_dial_oldperson = lv_obj_create(NULL);
     lv_obj_clear_flag(face_dial_oldperson, LV_OBJ_FLAG_SCROLLABLE);
@@ -241,7 +241,7 @@ void init_face_dial_oldperson(void (*callback)(const char*, const lv_img_dsc_t *
     lv_obj_clear_flag(face_dial_oldperson_12_188858, LV_OBJ_FLAG_SCROLLABLE );
 
 
-    callback("dial oldperson", &face_dial_oldperson_dial_img_preview_0, &face_dial_oldperson);
+    callback("dial oldperson", &face_dial_oldperson_dial_img_preview_0, &face_dial_oldperson, 0, NULL, NULL);
 
 #endif
 }

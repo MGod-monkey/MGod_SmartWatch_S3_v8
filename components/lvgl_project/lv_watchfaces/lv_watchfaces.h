@@ -9,7 +9,6 @@
 #include "./analog_starcraft2/analog_starcraft2.h"
 #include "./dial_astronaut/dial_astronaut.h"
 #include "./dial_astronaut2/dial_astronaut2.h"
-// #include "./dial_astronaut3/dial_astronaut3.h"
 #include "./dial_blackboard/dial_blackboard.h"
 #include "./dial_dog/dial_dog.h"
 #include "./dial_filled/dial_filled.h"
@@ -17,17 +16,24 @@
 #include "./dial_oldperson/dial_oldperson.h"
 #include "./dial_rabbit/dial_rabbit.h"
 
-static const char *WATCHFACE_TAG = "表盘";
-#define LV_WATCHFACES_MAX_FACES 15
+#define ANIMATION_FRAME_RATE 30 // 动画帧率
+static const char *WATCHFACE_TAG = "Watchfaces";
+#define LV_WATCHFACES_MAX_FACES 10
 lv_obj_t *ui_faceSelect;
 lv_obj_t *ui_watchface;
-
-int numFaces = 0;
+int ui_anim_img_num=0;
+static int numFaces = 0;            // 当前表盘索引
+static int current_frame_index = 0; // 当前动画帧索引
+lv_timer_t *timer_anim;
+bool is_flushTime = false;
 
 struct Face
 {
     const char *name;            // watchface name
     const lv_img_dsc_t *preview; // watchface preview image
+    lv_obj_t * anim_img;        // animation image object
+    lv_img_dsc_t **anim_img_group; // animation image group
+    int anim_img_num; // number of animation images
     lv_obj_t **watchface;        // watchface root object pointer
 };
 
@@ -36,17 +42,17 @@ struct Face faces[LV_WATCHFACES_MAX_FACES];
 
 void onFaceSelected(lv_event_t *e)
 {
-    lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t *target = lv_event_get_target(e);
     int index = (int)lv_event_get_user_data(e);
 
-    if (event_code == LV_EVENT_CLICKED)
-    {
-        if (index >= numFaces)
-            return;
-        ui_watchface = *faces[index].watchface;
-        lv_scr_load_anim(ui_watchface, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, false);
-    }
+    if (index >= LV_WATCHFACES_MAX_FACES-1)
+        return;
+    numFaces = index;
+    ui_watchface = *faces[index].watchface;
+    ui_anim_img_num = faces[index].anim_img_num;
+    lv_scr_load_anim(ui_watchface, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, false);
+    lv_timer_resume(timer_anim);
+    is_flushTime = true;
 }
 
 void onFaceEvent(lv_event_t *e)
@@ -55,7 +61,11 @@ void onFaceEvent(lv_event_t *e)
     lv_obj_t *target = lv_event_get_target(e);
 
     if (event_code == LV_EVENT_LONG_PRESSED)
+    {
+        is_flushTime = false;
+        lv_timer_pause(timer_anim);
         lv_scr_load_anim(ui_faceSelect, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, false);
+    }
 }
 
 void addWatchface(const char *name, const lv_img_dsc_t *src, int index)
@@ -95,7 +105,7 @@ void addWatchface(const char *name, const lv_img_dsc_t *src, int index)
     lv_obj_set_style_text_align(ui_faceLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_faceLabel, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_add_event_cb(ui_faceItem, onFaceSelected, LV_EVENT_ALL, (void *)index);
+    lv_obj_add_event_cb(ui_faceItem, onFaceSelected, LV_EVENT_CLICKED, (void *)index);
 }
 
 void init_face_select()
@@ -120,18 +130,34 @@ void init_face_select()
     lv_obj_set_style_pad_column(ui_faceSelect, 15, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
-void registerWatchface_cb(const char *name, const lv_img_dsc_t *preview, lv_obj_t **watchface)
-{
-    if (numFaces >= LV_WATCHFACES_MAX_FACES)
-    {
+void registerWatchface_cb(const char *name, const lv_img_dsc_t *preview, lv_obj_t **watchface, int anim_img_num, lv_obj_t *anim_img, const lv_img_dsc_t **anim_img_group) {
+    if (numFaces >= LV_WATCHFACES_MAX_FACES) {
         return;
     }
+
     faces[numFaces].name = name;
     faces[numFaces].preview = preview;
     faces[numFaces].watchface = watchface;
+    faces[numFaces].anim_img_num = anim_img_num;
+    faces[numFaces].anim_img = anim_img;
+    faces[numFaces].anim_img_group = anim_img_group;
+
+    // 调用添加表盘的函数
     addWatchface(faces[numFaces].name, faces[numFaces].preview, numFaces);
     log_printf(WATCHFACE_TAG, LOG_DEBUG, "add watchface: %s", faces[numFaces].name);
     numFaces++;
+}
+
+// 动画定时器回调
+static void animation_timer_cb(lv_timer_t * timer)
+{
+    if (ui_anim_img_num == 0)
+        return;
+    // 切换到下一个帧
+    current_frame_index = (current_frame_index + 1) % ui_anim_img_num;
+
+    // 更新图像
+    lv_img_set_src(faces[numFaces].anim_img, faces[numFaces].anim_img_group[current_frame_index]);
 }
 
 void watchface_init()
@@ -171,13 +197,21 @@ void watchface_init()
     else
     {
         ui_watchface = *faces[1].watchface;
+        ui_anim_img_num = faces[1].anim_img_num;
+        numFaces = 1;
     }
 
     lv_disp_load_scr(ui_watchface);
+    // 根据帧数变量设置定时器刷新间隔
+    int refresh_interval = (int)(1000.0 / ANIMATION_FRAME_RATE + 0.5);  // 四舍五入取整
+    timer_anim = lv_timer_create(animation_timer_cb, refresh_interval, NULL);  // 动态调整刷新间隔
+    is_flushTime = true;
 }
 
 void watchface_update()
 {
+    if (!is_flushTime)
+        return;
     int second = system_time_get_second();
     int minute = system_time_get_minute();
     int hour = system_time_get_hour();

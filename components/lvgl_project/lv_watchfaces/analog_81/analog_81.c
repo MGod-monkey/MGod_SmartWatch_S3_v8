@@ -46,7 +46,7 @@ const lv_img_dsc_t *face_analog_81_dial_img_1_1124_group[] = {
 
 #endif
 
-void init_face_analog_81(void (*callback)(const char*, const lv_img_dsc_t *, lv_obj_t **)){
+void init_face_analog_81(void (*callback)(const char *name, const lv_img_dsc_t *preview, lv_obj_t **watchface, int anim_img_num, lv_obj_t *anim_img, const lv_img_dsc_t **anim_img_group)){
 #ifdef ENABLE_FACE_ANALOG_81
     face_analog_81 = lv_obj_create(NULL);
     lv_obj_clear_flag(face_analog_81, LV_OBJ_FLAG_SCROLLABLE);
@@ -164,7 +164,7 @@ void init_face_analog_81(void (*callback)(const char*, const lv_img_dsc_t *, lv_
 	lv_img_set_pivot(face_analog_81_40_226768, 13, 120);
 
 
-    callback("analog 81", &face_analog_81_dial_img_preview_0, &face_analog_81);
+    callback("analog 81", &face_analog_81_dial_img_preview_0, &face_analog_81, 0, NULL, NULL);
 
 #endif
 }

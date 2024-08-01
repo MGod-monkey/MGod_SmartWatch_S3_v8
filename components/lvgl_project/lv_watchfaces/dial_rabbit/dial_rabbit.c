@@ -204,7 +204,7 @@ const lv_img_dsc_t *face_dial_rabbit_dial_img_50_129698_group[] = {
 
 #endif
 
-void init_face_dial_rabbit(void (*callback)(const char*, const lv_img_dsc_t *, lv_obj_t **)){
+void init_face_dial_rabbit(void (*callback)(const char *name, const lv_img_dsc_t *preview, lv_obj_t **watchface, int anim_img_num, lv_obj_t *anim_img, const lv_img_dsc_t **anim_img_group)){
 #ifdef ENABLE_FACE_DIAL_RABBIT
     face_dial_rabbit = lv_obj_create(NULL);
     lv_obj_clear_flag(face_dial_rabbit, LV_OBJ_FLAG_SCROLLABLE);
@@ -624,8 +624,8 @@ void init_face_dial_rabbit(void (*callback)(const char*, const lv_img_dsc_t *, l
     lv_obj_add_flag(face_dial_rabbit_62_129698, LV_OBJ_FLAG_ADV_HITTEST );
     lv_obj_clear_flag(face_dial_rabbit_62_129698, LV_OBJ_FLAG_SCROLLABLE );
 
-
-    callback("dial rabbit", &face_dial_rabbit_dial_img_preview_0, &face_dial_rabbit);
+    int anim_img_num = sizeof(face_dial_rabbit_dial_img_1_75194_group) / sizeof(face_dial_rabbit_dial_img_1_75194_group[0]);
+    callback("dial rabbit", &face_dial_rabbit_dial_img_preview_0, &face_dial_rabbit, anim_img_num, face_dial_rabbit_dial_img_1_75194, face_dial_rabbit_dial_img_1_75194_group);
 
 #endif
 }

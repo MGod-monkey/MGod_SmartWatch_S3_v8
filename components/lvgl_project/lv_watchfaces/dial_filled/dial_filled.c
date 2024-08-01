@@ -39,7 +39,7 @@ const lv_img_dsc_t *face_dial_filled_dial_img_0_84_group[] = {
 
 #endif
 
-void init_face_dial_filled(void (*callback)(const char*, const lv_img_dsc_t *, lv_obj_t **)){
+void init_face_dial_filled(void (*callback)(const char *name, const lv_img_dsc_t *preview, lv_obj_t **watchface, int anim_img_num, lv_obj_t *anim_img, const lv_img_dsc_t **anim_img_group)){
 #ifdef ENABLE_FACE_DIAL_FILLED
     face_dial_filled = lv_obj_create(NULL);
     lv_obj_clear_flag(face_dial_filled, LV_OBJ_FLAG_SCROLLABLE);
@@ -91,7 +91,7 @@ void init_face_dial_filled(void (*callback)(const char*, const lv_img_dsc_t *, l
     lv_obj_clear_flag(face_dial_filled_3_84, LV_OBJ_FLAG_SCROLLABLE );
 
 
-    callback("dial filled", &face_dial_filled_dial_img_preview_0, &face_dial_filled);
+    callback("dial filled", &face_dial_filled_dial_img_preview_0, &face_dial_filled, 0, NULL, NULL);
 
 #endif
 }

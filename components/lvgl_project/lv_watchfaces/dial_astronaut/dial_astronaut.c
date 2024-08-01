@@ -158,7 +158,7 @@ const lv_img_dsc_t *face_dial_astronaut_dial_img_weather[] = {
 
 #endif
 
-void init_face_dial_astronaut(void (*callback)(const char*, const lv_img_dsc_t *, lv_obj_t **)){
+void init_face_dial_astronaut(void (*callback)(const char *name, const lv_img_dsc_t *preview, lv_obj_t **watchface, int anim_img_num, lv_obj_t *anim_img, const lv_img_dsc_t **anim_img_group)){
 #ifdef ENABLE_FACE_DIAL_ASTRONAUT
     face_dial_astronaut = lv_obj_create(NULL);
     lv_obj_clear_flag(face_dial_astronaut, LV_OBJ_FLAG_SCROLLABLE);
@@ -578,8 +578,9 @@ void init_face_dial_astronaut(void (*callback)(const char*, const lv_img_dsc_t *
     lv_obj_add_flag(face_dial_astronaut_58_84569, LV_OBJ_FLAG_ADV_HITTEST );
     lv_obj_clear_flag(face_dial_astronaut_58_84569, LV_OBJ_FLAG_SCROLLABLE );
 
+    int anim_img_num = sizeof(face_dial_astronaut_dial_img_1_24923_group) / sizeof(face_dial_astronaut_dial_img_1_24923_group[0]);
 
-    callback("dial astronaut", &face_dial_astronaut_dial_img_preview_0, &face_dial_astronaut);
+    callback("dial astronaut", &face_dial_astronaut_dial_img_preview_0, &face_dial_astronaut, anim_img_num, face_dial_astronaut_1_24923, face_dial_astronaut_dial_img_1_24923_group);
 
 #endif
 }

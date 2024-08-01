@@ -118,6 +118,12 @@ bool obtain_time(void)
         log_printf(SYSTEMTIME_TAG, LOG_ERROR, "Failed to obtain time");
         return false;
     } else {
+        // 设置时区
+        setenv("TZ", "CST-8", 1);
+        tzset();
+        time_t now;
+        time(&now);
+        localtime_r(&now, &timeinfo);
         log_printf(SYSTEMTIME_TAG, LOG_INFO, "Time is set to: %s", asctime(&timeinfo));
         return true;
     }
@@ -187,7 +193,7 @@ int system_time_get_day(void)
 int system_time_get_month(void)
 {
     update_timeinfo();
-    return timeinfo.tm_mon;
+    return timeinfo.tm_mon+1;
 }
 
 int system_time_get_year(void)

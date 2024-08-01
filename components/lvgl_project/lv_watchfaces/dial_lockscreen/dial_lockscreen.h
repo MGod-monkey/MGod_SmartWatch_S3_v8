@@ -69,7 +69,7 @@ extern "C"
 #endif
     void onFaceEvent(lv_event_t * e);
 
-    void init_face_dial_lockscreen(void (*callback)(const char*, const lv_img_dsc_t *, lv_obj_t **));
+    void init_face_dial_lockscreen(void (*callback)(const char *name, const lv_img_dsc_t *preview, lv_obj_t **watchface, int anim_img_num, lv_obj_t *anim_img, const lv_img_dsc_t **anim_img_group));
     void update_time_dial_lockscreen(int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday);
     void update_weather_dial_lockscreen(int temp, int icon);
     void update_status_dial_lockscreen(int battery, bool connection);

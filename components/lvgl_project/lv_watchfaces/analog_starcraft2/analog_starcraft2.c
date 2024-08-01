@@ -60,7 +60,7 @@ const lv_img_dsc_t *face_analog_starcraft2_dial_img_9_347008_group[] = {
 
 #endif
 
-void init_face_analog_starcraft2(void (*callback)(const char*, const lv_img_dsc_t *, lv_obj_t **)){
+void init_face_analog_starcraft2(void (*callback)(const char *name, const lv_img_dsc_t *preview, lv_obj_t **watchface, int anim_img_num, lv_obj_t *anim_img, const lv_img_dsc_t **anim_img_group)){
 #ifdef ENABLE_FACE_ANALOG_STARCRAFT2
     face_analog_starcraft2 = lv_obj_create(NULL);
     lv_obj_clear_flag(face_analog_starcraft2, LV_OBJ_FLAG_SCROLLABLE);
@@ -142,7 +142,7 @@ void init_face_analog_starcraft2(void (*callback)(const char*, const lv_img_dsc_
 	lv_img_set_pivot(face_analog_starcraft2_42_229134, 13, 121);
 
 
-    callback("analog starcraft2", &face_analog_starcraft2_dial_img_preview_0, &face_analog_starcraft2);
+    callback("analog starcraft2", &face_analog_starcraft2_dial_img_preview_0, &face_analog_starcraft2, 0, NULL, NULL);
 
 #endif
 }
