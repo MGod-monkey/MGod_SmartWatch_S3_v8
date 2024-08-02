@@ -2,12 +2,17 @@
 #define LV_PROJECT_H
 
 #include "lvgl.h"
+#include "lv_hint.h"
+#include "lv_setup.h"
 #include "lv_watchfaces.h"
-
+#include "lv_rollmsg.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define LV_HOR_RES_MAX 240
+#define LV_VER_RES_MAX 280
 
 void msg_roll(lv_obj_t * parent);//一定要先运行一次这个玩意，再添加新的消息
 

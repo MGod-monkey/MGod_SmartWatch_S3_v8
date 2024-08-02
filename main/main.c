@@ -19,14 +19,14 @@
 #include "lvgl.h"
 #include "lv_port_disp.h"
 #include "lv_port_indev.h"
-#include "lv_game_2048.h"
+// #include "lv_game_2048.h"
 #include "lv_project.h"
 #include "system_time.h"
-#include "main.h"
+// #include "main.h"
 // #include <dos.h>
 
 // #include "lv_demos.h"
-LV_IMG_DECLARE(bmp_tianqi_40x40_0)
+// LV_IMG_DECLARE(bmp_tianqi_40x40_0)
 void app_main(void)
 {
     // printf("Hello world!\n");
@@ -34,12 +34,11 @@ void app_main(void)
     lv_init();
     lv_port_disp_init();
     lv_port_indev_init();
-    watchface_init();
-    
-    
+    setupView_init();
     wifi_init_sta();
     load_time_from_nvs();  // 从NVS中加载时间
     xTaskCreate(sntp_sync_task, "SNTP Sync Task", SNTP_TASK_STACK_SIZE, NULL, SNTP_TASK_PRIORITY, NULL);
+    test();
     // lv_game_2048_simple_test();
     while(1)
     {

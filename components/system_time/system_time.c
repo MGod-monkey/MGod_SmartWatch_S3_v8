@@ -16,7 +16,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         log_printf(SYSTEMTIME_TAG, LOG_INFO, "got ip:%s", ip4addr_ntoa(&event->ip_info.ip));
-        lv_hint_create("wifi connected", 250, 5);
+        lv_hint_create("wifi connected", 250, 2);
     }
 }
 
@@ -135,7 +135,7 @@ bool obtain_time(void)
         setenv("TZ", "CST-8", 1);
         tzset();
         log_printf(SYSTEMTIME_TAG, LOG_INFO, "Time is set to: %s", asctime(&timeinfo));
-        lv_hint_create("time set successfully", 250, 5);
+        lv_hint_create("time set successfully", 250, 2);
         return true;
     }
 }
