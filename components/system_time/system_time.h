@@ -16,10 +16,14 @@ static const char *SYSTEMTIME_TAG = "system_time";
 #define WIFI_PASS      "G-STAR1211"
 
 extern struct tm timeinfo;
+// 定义 SNTP 同步任务堆栈大小和任务优先级
+#define SNTP_TASK_STACK_SIZE 4096
+#define SNTP_TASK_PRIORITY   5
 
 void wifi_init_sta(void);
 bool obtain_time(void);
 bool load_time_from_nvs(void);
+void sntp_sync_task(void *pvParameters);
 struct tm system_time_get_timeinfo(void);
 int system_time_get_second(void);
 int system_time_get_minute(void);

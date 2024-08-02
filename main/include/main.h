@@ -124,7 +124,7 @@ static void custom_log(log_level_t level, const char* tag, const char* file, int
 }
 
 // 定义控制日志级别的宏
-#define SHOW_DEBUG 1  // 0: 不显示日志, 1: 仅显示 ERROR 和 INFO, 2: 显示所有日志
+#define SHOW_DEBUG 2  // 0: 不显示日志, 1: 仅显示 ERROR 和 INFO, 2: 显示所有日志
 
 #if SHOW_DEBUG == 0
     #define log_printf(tag, level, format, ...)

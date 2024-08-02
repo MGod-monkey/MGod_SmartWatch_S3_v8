@@ -16,6 +16,7 @@ typedef struct
 
 	lv_obj_t * lv_hint;
 	lv_obj_t * lv_btn_tuichu;
+	lv_obj_t * lv_hint_label;
 }_hint;
 
 extern _hint hint;
@@ -40,7 +41,8 @@ extern _hint hint;
 
 void lv_hint_anim_jin(void);
 void lv_hint_anim_chu(void);
-void lv_hint_create(lv_obj_t * scr, const char *text, uint8_t touming, uint8_t delay);
+void lv_hint_create(const char *text, uint8_t touming, uint8_t delay);
+void lv_hint_create_full(lv_obj_t * scr, const char *text, uint8_t touming, uint8_t delay);
 void lv_hint_close(void);
 void lv_hint_taskCb(lv_timer_t *t);
 

@@ -38,30 +38,9 @@ void app_main(void)
     
     
     wifi_init_sta();
-    if (!obtain_time())
-        load_time_from_nvs();  // 从NVS中加载时间
-
-    // // 如果时间未同步过，执行SNTP同步
-    // if (timeinfo.tm_year < (2023 - 1900)) {
-    //     obtain_time();
-    // }
-    // system_time_print();  // 打印时间
-    // watch.setConnectionCallback(connectionCallback);
-    // watch.setNotificationCallback(notificationCallback);
-    // watch.setConfigurationCallback(configCallback);
-    // watch.begin();
-    // watch.set24Hour(true);
-    // watch.setBattery(70);
+    load_time_from_nvs();  // 从NVS中加载时间
+    xTaskCreate(sntp_sync_task, "SNTP Sync Task", SNTP_TASK_STACK_SIZE, NULL, SNTP_TASK_PRIORITY, NULL);
     // lv_game_2048_simple_test();
-    // lv_hint_create(lv_scr_act(),"task", 200, 2);
-    // test();
-    // lvgl_hint_create(lv_scr_act(),"task",200,20);
-    // // 在画板上写上文字
-    // lv_obj_t *label = lv_label_create( lv_scr_act() );
-    // // 在画板上写上文字
-    // lv_label_set_text( label, "Hello World!I'm fine!" );
-    // // 设置画板上的对齐方式，也就是布局
-    // lv_obj_align( label, LV_ALIGN_CENTER, 0, 0 );
     while(1)
     {
         lv_task_handler();

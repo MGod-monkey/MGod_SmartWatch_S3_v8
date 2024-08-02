@@ -1,5 +1,6 @@
 #include "system_time.h"
 #include "main.h"
+#include "lv_hint.h"
 
 struct tm timeinfo = { 0 };
 
@@ -15,6 +16,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         log_printf(SYSTEMTIME_TAG, LOG_INFO, "got ip:%s", ip4addr_ntoa(&event->ip_info.ip));
+        lv_hint_create("wifi connected", 250, 5);
     }
 }
 
@@ -91,6 +93,16 @@ void time_sync_notification_cb(struct timeval *tv)
     nvs_close(nvs_handle);
 }
 
+// SNTP 时间同步任务
+void sntp_sync_task(void *pvParameters) {
+    // 等待网络连接成功
+    log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "Starting SNTP sync task...");
+    obtain_time();
+
+    // 删除任务
+    vTaskDelete(NULL);
+}
+
 void initialize_sntp(void)
 {
     log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "Initializing SNTP");
@@ -123,6 +135,7 @@ bool obtain_time(void)
         setenv("TZ", "CST-8", 1);
         tzset();
         log_printf(SYSTEMTIME_TAG, LOG_INFO, "Time is set to: %s", asctime(&timeinfo));
+        lv_hint_create("time set successfully", 250, 5);
         return true;
     }
 }

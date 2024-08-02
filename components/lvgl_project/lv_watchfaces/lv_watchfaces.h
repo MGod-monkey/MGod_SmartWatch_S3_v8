@@ -3,6 +3,7 @@
 
 #include "lvgl.h"
 #include "main.h"
+#include "lv_hint.h"
 #include "system_time.h"
 #include "./analog_81/analog_81.h"
 #include "./analog_nike/analog_nike.h"
