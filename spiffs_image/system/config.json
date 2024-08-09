@@ -1,23 +1,16 @@
 {
     "wifi":[
         {
-            "name":"INSS-Lab",
+            "name":"INSS-Lab_2.4G",
             "password":"G-STAR1211",
             "auto connect":"true"
         }
     ],
-    "system set":[
+    "system_set":[
         {
             "wifi switch":1,
             "backlight":50,
-            "language":0,
-            "bilibili id":"430380301"
-        }
-    ],
-    "clock data":[
-        {
-            "type":1,
-            "style":1
+            "language":0
         }
     ]
 }

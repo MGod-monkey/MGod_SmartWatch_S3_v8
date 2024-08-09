@@ -49,5 +49,5 @@ idf_component_register(SRC_DIRS
                         "lv_watchfaces/dial_blackboard"
                         "lv_game_2048"
                         "lv_hint"
-                        REQUIRES main lvgl_porting system_time
+                        REQUIRES main lvgl_porting system
                       )

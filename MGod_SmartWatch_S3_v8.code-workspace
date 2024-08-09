@@ -23,7 +23,8 @@
 			"dial_blackboard.h": "c",
 			"dial_filled.h": "c",
 			"dial_lockscreen.h": "c",
-			"dial_oldperson.h": "c"
+			"dial_oldperson.h": "c",
+			"*.inc": "c"
 		}
 	}
 }

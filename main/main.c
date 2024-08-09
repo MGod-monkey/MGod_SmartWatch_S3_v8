@@ -22,6 +22,8 @@
 // #include "lv_game_2048.h"
 #include "lv_project.h"
 #include "system_time.h"
+#include "system_config.h"
+#include "hal_sd.h"
 // #include "main.h"
 // #include <dos.h>
 
@@ -34,16 +36,18 @@ void app_main(void)
     lv_init();
     lv_port_disp_init();
     lv_port_indev_init();
-    setupView_init();
-    wifi_init_sta();
-    load_time_from_nvs();  // 从NVS中加载时间
-    xTaskCreate(sntp_sync_task, "SNTP Sync Task", SNTP_TASK_STACK_SIZE, NULL, SNTP_TASK_PRIORITY, NULL);
-    test();
+    system_init();
+    hal_sd_init();
+    // setupView_init();
+    // wifi_init_sta();
+    // load_time_from_nvs();  // 从NVS中加载时间
+    // xTaskCreate(sntp_sync_task, "SNTP Sync Task", SNTP_TASK_STACK_SIZE, NULL, SNTP_TASK_PRIORITY, NULL);
+    // test();
     // lv_game_2048_simple_test();
     while(1)
     {
         lv_task_handler();
-        watchface_update();
+        // watchface_update();
         lv_tick_inc(10);
         vTaskDelay(pdMS_TO_TICKS(10));
     }

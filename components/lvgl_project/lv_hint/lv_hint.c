@@ -5,6 +5,7 @@ static uint8_t last_delay = 0;
 static char *hint_text = NULL;
 lv_style_t lv_tishi_style;
 bool haved_newMessage = false;
+static const char *HINT_TAG = "lv_hint";
 
 static void lv_hint_event_cb(lv_event_t * e)
 {

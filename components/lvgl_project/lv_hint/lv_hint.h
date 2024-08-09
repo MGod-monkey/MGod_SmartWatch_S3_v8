@@ -5,7 +5,6 @@
 #include "main.h"
 // #include "lv_Project.h"
 // #include "my_system.h"
-static const char *HINT_TAG = "lv_hint";
 
 typedef struct
 {
