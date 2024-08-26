@@ -108,9 +108,9 @@ void initialize_sntp(void)
 {
     log_printf(SYSTEMTIME_TAG, LOG_DEBUG, "Initializing SNTP");
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    sntp_setservername(0, "ntp.aliyun.com");
-    sntp_setservername(1, "cn.pool.ntp.org");
-    sntp_setservername(2, "ntp.tencent.com");
+    esp_sntp_setservername(0, "ntp.aliyun.com");
+    esp_sntp_setservername(1, "cn.pool.ntp.org");
+    esp_sntp_setservername(2, "ntp.tencent.com");
     sntp_set_time_sync_notification_cb(time_sync_notification_cb);
     sntp_init();
 }

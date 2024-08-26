@@ -30,16 +30,33 @@
 #define EQ5_9000Hz		0X02
 #define EQ5_11700Hz		0X03
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+#define WM8978_ADDR 0x1A  // WM8978 I2C 地址
+
+// WM8978 初始化函数
 uint8_t WM8978_Init(void);
-void WM8978_ADDA_Cfg(uint8_t dacen,uint8_t adcen);
-void WM8978_Input_Cfg(uint8_t micen,uint8_t lineinen,uint8_t auxen);
-void WM8978_Output_Cfg(uint8_t dacen,uint8_t bpsen);
+
+// WM8978 DAC/ADC 配置
+void WM8978_ADDA_Cfg(uint8_t dacen, uint8_t adcen);
+
+// 输入通道配置
+void WM8978_Input_Cfg(uint8_t micen, uint8_t lineinen, uint8_t auxen);
+
+// 输出通道配置
+void WM8978_Output_Cfg(uint8_t dacen, uint8_t bpsen);
+
+// // 写寄存器函数
+// esp_err_t WM8978_Write_Reg(uint8_t reg, uint16_t val);
+
+// // 读寄存器函数
+// uint16_t WM8978_Read_Reg(uint8_t reg);
+
 void WM8978_MIC_Gain(uint8_t gain);
 void WM8978_LINEIN_Gain(uint8_t gain);
 void WM8978_AUX_Gain(uint8_t gain);
-uint8_t WM8978_Write_Reg(uint8_t reg,uint16_t val);
-uint16_t WM8978_Read_Reg(uint8_t reg);
 void WM8978_HPvol_Set(uint8_t voll,uint8_t volr);
 void WM8978_SPKvol_Set(uint8_t volx);
 void WM8978_I2S_Cfg(uint8_t fmt,uint8_t len);
@@ -50,6 +67,11 @@ void WM8978_EQ2_Set(uint8_t cfreq,uint8_t gain);
 void WM8978_EQ3_Set(uint8_t cfreq,uint8_t gain);
 void WM8978_EQ4_Set(uint8_t cfreq,uint8_t gain);
 void WM8978_EQ5_Set(uint8_t cfreq,uint8_t gain);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif
 

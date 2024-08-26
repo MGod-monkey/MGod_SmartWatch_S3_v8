@@ -18,10 +18,11 @@
 
 
 #define I2C_PORT_NUM_TP     (0)
-#define GPIO_TP_I2C_SCL     (GPIO_NUM_48)
-#define GPIO_TP_I2C_SDA     (GPIO_NUM_47)
+#define GPIO_I2C1_SCL     (GPIO_NUM_5)
+#define GPIO_I2C1_SDA     (GPIO_NUM_4)
+#define GPIO_I2C2_SCL     (GPIO_NUM_48)
+#define GPIO_I2C2_SDA     (GPIO_NUM_47)
 
-#define GPIO_LED_R      (GPIO_NUM_5)
 #define GPIO_LED_G      (GPIO_NUM_6)
 
 

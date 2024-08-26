@@ -1,6 +1,9 @@
 #include "wm8978.h"
-#include "bsp_i2c1.h"
+#include "hal_i2c1.h"
 
+// static uint16_t WM8978_REGVAL_TBL[58] = {0};
+
+static const char *WM8978_TAG = "WM8978";
 
 //WM8978寄存器值缓存区(总共58个寄存器,0~57),占用116字节内存
 //因为WM8978的IIC操作不支持读操作,所以在本地保存所有寄存器值
@@ -17,111 +20,87 @@ static uint16_t WM8978_REGVAL_TBL[58]=
 	0X0100,0X0002,0X0001,0X0001,0X0039,0X0039,0X0039,0X0039,
 	0X0001,0X0001
 };
-//WM8978初始化
-//返回值:0,初始化正常
-//    其他,错误代码
-uint8_t WM8978_Init(void)
-{
-	uint8_t res;
 
-	IIC_Init();//初始化IIC接口
-	res=WM8978_Write_Reg(0,0);	//软复位WM8978
-	if(res)
-	{
-		printf("WM8978初始化失败！\r\n");
-		return 1;			//发送指令失败,WM8978异常
-	}
-	//以下为通用设置
-	WM8978_Write_Reg(1,0X1B);	//R1,MICEN设置为1(MIC使能),BIASEN设置为1(模拟器工作),VMIDSEL[1:0]设置为:11(5K)
-	WM8978_Write_Reg(2,0X1B0);	//R2,ROUT1,LOUT1输出使能(耳机可以工作),BOOSTENR,BOOSTENL使能
-	WM8978_Write_Reg(3,0X6C);	//R3,LOUT2,ROUT2输出使能(喇叭工作),RMIX,LMIX使能
-	WM8978_Write_Reg(6,0);		//R6,MCLK由外部提供
-	WM8978_Write_Reg(43,1<<4);	//R43,INVROUT2反向,驱动喇叭
-	WM8978_Write_Reg(47,1<<8);	//R47设置,PGABOOSTL,左通道MIC获得20倍增益
-	WM8978_Write_Reg(48,1<<8);	//R48设置,PGABOOSTR,右通道MIC获得20倍增益
-	WM8978_Write_Reg(49,1<<1);	//R49,TSDEN,开启过热保护
-	WM8978_Write_Reg(10,1<<3);	//R10,SOFTMUTE关闭,128x采样,最佳SNR
-	WM8978_Write_Reg(14,1<<3);	//R14,ADC 128x采样率
-	printf("WM8978初始化成功！\r\n");
-	return 0;
-}
 //WM8978写寄存器
 //reg:寄存器地址
 //val:要写入寄存器的值
 //返回值:0,成功;
 //    其他,错误代码
-uint8_t WM8978_Write_Reg(uint8_t reg,uint16_t val)
-{
-	IIC_Start();
-	IIC_Send_Byte((WM8978_ADDR<<1)|0);//发送器件地址+写命令
-	if(IIC_Wait_Ack())return 1;	//等待应答(成功?/失败?)
-    IIC_Send_Byte((reg<<1)|((val>>8)&0X01));//写寄存器地址+数据的最高位
-	if(IIC_Wait_Ack())return 2;	//等待应答(成功?/失败?)
-	IIC_Send_Byte(val&0XFF);	//发送数据
-	if(IIC_Wait_Ack())return 3;	//等待应答(成功?/失败?)
-    IIC_Stop();
-	WM8978_REGVAL_TBL[reg]=val;	//保存寄存器值到本地
-	return 0;
+static esp_err_t WM8978_Write_Reg(uint8_t reg, uint16_t val) {
+    uint8_t data[2];
+    data[0] = (reg << 1) | ((val >> 8) & 0x01);
+    data[1] = val & 0xFF;
+
+    esp_err_t ret = hal_i2c_master_write_byte(WM8978_ADDR, data[0], data[1]);
+
+    if (ret == ESP_OK) {
+        WM8978_REGVAL_TBL[reg] = val;
+    } else {
+		log_printf(WM8978_TAG, LOG_ERROR, "Failed to write register: 0x%02X", reg);
+    }
+
+    return ret;
 }
 //WM8978读寄存器
 //就是读取本地寄存器值缓冲区内的对应值
 //reg:寄存器地址
 //返回值:寄存器值
-uint16_t WM8978_Read_Reg(uint8_t reg)
-{
-	return WM8978_REGVAL_TBL[reg];
+static uint16_t WM8978_Read_Reg(uint8_t reg) {
+    return WM8978_REGVAL_TBL[reg];
 }
 //WM8978 DAC/ADC配置
 //adcen:adc使能(1)/关闭(0)
 //dacen:dac使能(1)/关闭(0)
-void WM8978_ADDA_Cfg(uint8_t dacen,uint8_t adcen)
-{
-	uint16_t regval;
-	regval=WM8978_Read_Reg(3);	//读取R3
-	if(dacen)regval|=3<<0;		//R3最低2个位设置为1,开启DACR&DACL
-	else regval&=~(3<<0);		//R3最低2个位清零,关闭DACR&DACL.
-	WM8978_Write_Reg(3,regval);	//设置R3
-	regval=WM8978_Read_Reg(2);	//读取R2
-	if(adcen)regval|=3<<0;		//R2最低2个位设置为1,开启ADCR&ADCL
-	else regval&=~(3<<0);		//R2最低2个位清零,关闭ADCR&ADCL.
-	WM8978_Write_Reg(2,regval);	//设置R2
+void WM8978_ADDA_Cfg(uint8_t dacen, uint8_t adcen) {
+    uint16_t regval;
+
+    regval = WM8978_Read_Reg(3);
+    regval = dacen ? (regval | 3) : (regval & ~3);
+    WM8978_Write_Reg(3, regval);
+
+    regval = WM8978_Read_Reg(2);
+    regval = adcen ? (regval | 3) : (regval & ~3);
+    WM8978_Write_Reg(2, regval);
 }
 //WM8978 输入通道配置
 //micen:MIC开启(1)/关闭(0)
 //lineinen:Line In开启(1)/关闭(0)
 //auxen:aux开启(1)/关闭(0)
-void WM8978_Input_Cfg(uint8_t micen,uint8_t lineinen,uint8_t auxen)
-{
-	uint16_t regval;
-	regval=WM8978_Read_Reg(2);	//读取R2
-	if(micen)regval|=3<<2;		//开启INPPGAENR,INPPGAENL(MIC的PGA放大)
-	else regval&=~(3<<2);		//关闭INPPGAENR,INPPGAENL.
- 	WM8978_Write_Reg(2,regval);	//设置R2
+void WM8978_Input_Cfg(uint8_t micen, uint8_t lineinen, uint8_t auxen) {
+    uint16_t regval;
 
-	regval=WM8978_Read_Reg(44);	//读取R44
-	if(micen)regval|=3<<4|3<<0;	//开启LIN2INPPGA,LIP2INPGA,RIN2INPPGA,RIP2INPGA.
-	else regval&=~(3<<4|3<<0);	//关闭LIN2INPPGA,LIP2INPGA,RIN2INPPGA,RIP2INPGA.
-	WM8978_Write_Reg(44,regval);//设置R44
+    regval = WM8978_Read_Reg(2);
+    regval = micen ? (regval | (3 << 2)) : (regval & ~(3 << 2));
+    WM8978_Write_Reg(2, regval);
 
-	if(lineinen)WM8978_LINEIN_Gain(5);//LINE IN 0dB增益
-	else WM8978_LINEIN_Gain(0);	//关闭LINE IN
-	if(auxen)WM8978_AUX_Gain(7);//AUX 6dB增益
-	else WM8978_AUX_Gain(0);	//关闭AUX输入
+    regval = WM8978_Read_Reg(44);
+    regval = micen ? (regval | (3 << 4) | (3 << 0)) : (regval & ~((3 << 4) | (3 << 0)));
+    WM8978_Write_Reg(44, regval);
+
+    if (lineinen) {
+        WM8978_LINEIN_Gain(5);
+    } else {
+        WM8978_LINEIN_Gain(0);
+    }
+
+    if (auxen) {
+        WM8978_AUX_Gain(7);
+    } else {
+        WM8978_AUX_Gain(0);
+    }
 }
 //WM8978 输出配置
 //dacen:DAC输出(放音)开启(1)/关闭(0)
 //bpsen:Bypass输出(录音,包括MIC,LINE IN,AUX等)开启(1)/关闭(0)
-void WM8978_Output_Cfg(uint8_t dacen,uint8_t bpsen)
-{
-	uint16_t regval=0;
-	if(dacen)regval|=1<<0;	//DAC输出使能
-	if(bpsen)
-	{
-		regval|=1<<1;		//BYPASS使能
-		regval|=5<<2;		//0dB增益
-	}
-	WM8978_Write_Reg(50,regval);//R50设置
-	WM8978_Write_Reg(51,regval);//R51设置
+void WM8978_Output_Cfg(uint8_t dacen, uint8_t bpsen) {
+    uint16_t regval = dacen ? (1 << 0) : 0;
+
+    if (bpsen) {
+        regval |= (1 << 1) | (5 << 2);
+    }
+
+    WM8978_Write_Reg(50, regval);
+    WM8978_Write_Reg(51, regval);
 }
 //WM8978 MIC增益设置(不包括BOOST的20dB,MIC-->ADC输入部分的增益)
 //gain:0~63,对应-12dB~35.25dB,0.75dB/Step
@@ -139,10 +118,10 @@ void WM8978_LINEIN_Gain(uint8_t gain)
 	gain&=0X07;
 	regval=WM8978_Read_Reg(47);	//读取R47
 	regval&=~(7<<4);			//清除原来的设置
- 	WM8978_Write_Reg(47,regval|gain<<4);//设置R47
+	WM8978_Write_Reg(47,regval|gain<<4);//设置R47
 	regval=WM8978_Read_Reg(48);	//读取R48
 	regval&=~(7<<4);			//清除原来的设置
- 	WM8978_Write_Reg(48,regval|gain<<4);//设置R48
+	WM8978_Write_Reg(48,regval|gain<<4);//设置R48
 }
 //WM8978 AUXR,AUXL(PWM音频部分)增益设置(AUXR/L-->ADC输入部分的增益)
 //gain:0~7,0表示通道禁止,1~7,对应-12dB~6dB,3dB/Step
@@ -152,10 +131,10 @@ void WM8978_AUX_Gain(uint8_t gain)
 	gain&=0X07;
 	regval=WM8978_Read_Reg(47);	//读取R47
 	regval&=~(7<<0);			//清除原来的设置
- 	WM8978_Write_Reg(47,regval|gain<<0);//设置R47
+	WM8978_Write_Reg(47,regval|gain<<0);//设置R47
 	regval=WM8978_Read_Reg(48);	//读取R48
 	regval&=~(7<<0);			//清除原来的设置
- 	WM8978_Write_Reg(48,regval|gain<<0);//设置R48
+	WM8978_Write_Reg(48,regval|gain<<0);//设置R48
 }
 //设置I2S工作模式
 //fmt:0,LSB(右对齐);1,MSB(左对齐);2,飞利浦标准I2S;3,PCM/DSP;
@@ -204,7 +183,7 @@ void WM8978_EQ_3D_Dir(uint8_t dir)
 	regval=WM8978_Read_Reg(0X12);
 	if(dir)regval|=1<<8;
 	else regval&=~(1<<8);
- 	WM8978_Write_Reg(18,regval);//R18,EQ1的第9位控制EQ/3D方向
+	WM8978_Write_Reg(18,regval);//R18,EQ1的第9位控制EQ/3D方向
 }
 
 //设置EQ1
@@ -220,7 +199,7 @@ void WM8978_EQ1_Set(uint8_t cfreq,uint8_t gain)
 	regval&=0X100;
 	regval|=cfreq<<5;	//设置截止频率
 	regval|=gain;		//设置增益
- 	WM8978_Write_Reg(18,regval);//R18,EQ1设置
+	WM8978_Write_Reg(18,regval);//R18,EQ1设置
 }
 //设置EQ2
 //cfreq:中心频率,0~3,分别对应:230/300/385/500Hz
@@ -233,7 +212,7 @@ void WM8978_EQ2_Set(uint8_t cfreq,uint8_t gain)
 	gain=24-gain;
 	regval|=cfreq<<5;	//设置截止频率
 	regval|=gain;		//设置增益
- 	WM8978_Write_Reg(19,regval);//R19,EQ2设置
+	WM8978_Write_Reg(19,regval);//R19,EQ2设置
 }
 //设置EQ3
 //cfreq:中心频率,0~3,分别对应:650/850/1100/1400Hz
@@ -246,7 +225,7 @@ void WM8978_EQ3_Set(uint8_t cfreq,uint8_t gain)
 	gain=24-gain;
 	regval|=cfreq<<5;	//设置截止频率
 	regval|=gain;		//设置增益
- 	WM8978_Write_Reg(20,regval);//R20,EQ3设置
+	WM8978_Write_Reg(20,regval);//R20,EQ3设置
 }
 //设置EQ4
 //cfreq:中心频率,0~3,分别对应:1800/2400/3200/4100Hz
@@ -259,7 +238,7 @@ void WM8978_EQ4_Set(uint8_t cfreq,uint8_t gain)
 	gain=24-gain;
 	regval|=cfreq<<5;	//设置截止频率
 	regval|=gain;		//设置增益
- 	WM8978_Write_Reg(21,regval);//R21,EQ4设置
+	WM8978_Write_Reg(21,regval);//R21,EQ4设置
 }
 //设置EQ5
 //cfreq:中心频率,0~3,分别对应:5300/6900/9000/11700Hz
@@ -272,11 +251,33 @@ void WM8978_EQ5_Set(uint8_t cfreq,uint8_t gain)
 	gain=24-gain;
 	regval|=cfreq<<5;	//设置截止频率
 	regval|=gain;		//设置增益
- 	WM8978_Write_Reg(22,regval);//R22,EQ5设置
+	WM8978_Write_Reg(22,regval);//R22,EQ5设置
 }
 
+//WM8978初始化
+//返回值:0,初始化正常
+//    其他,错误代码
+uint8_t WM8978_Init(void) {
 
+    if (WM8978_Write_Reg(0, 0) != ESP_OK) {
+		log_printf(WM8978_TAG, LOG_ERROR, "WM8978 init failed");
+        return 1;
+    }
 
+    // General initialization sequence
+    WM8978_Write_Reg(1, 0X1B);
+    WM8978_Write_Reg(2, 0X1B0);
+    WM8978_Write_Reg(3, 0X6C);
+    WM8978_Write_Reg(6, 0);
+    WM8978_Write_Reg(43, 1 << 4);
+    WM8978_Write_Reg(47, 1 << 8);
+    WM8978_Write_Reg(48, 1 << 8);
+    WM8978_Write_Reg(49, 1 << 1);
+    WM8978_Write_Reg(10, 1 << 3);
+    WM8978_Write_Reg(14, 1 << 3);
+	log_printf(WM8978_TAG, LOG_INFO, "WM8978 initialized successfully");
+    return 0;
+}
 
 
 

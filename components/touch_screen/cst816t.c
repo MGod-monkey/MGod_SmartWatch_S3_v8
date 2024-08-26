@@ -89,27 +89,26 @@ void cst816t_test_task(void *pvParameter)
     vTaskDelete(NULL);
 }
 
-static esp_err_t i2c2_master_init(void)
-{
-    int i2c_master_port = I2C_PORT_NUM_TP;
+// static esp_err_t i2c2_master_init(void)
+// {
+//     int i2c_master_port = I2C_PORT_NUM_TP;
 
-    i2c_config_t conf = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = GPIO_TP_I2C_SDA,
-        .scl_io_num = GPIO_TP_I2C_SCL,
-        .sda_pullup_en = GPIO_PULLUP_DISABLE,
-        .scl_pullup_en = GPIO_PULLUP_DISABLE,
-        .master.clk_speed = I2C_MASTER_FREQ_HZ,
-    };
+//     i2c_config_t conf = {
+//         .mode = I2C_MODE_MASTER,
+//         .sda_io_num = GPIO_TP_I2C_SDA,
+//         .scl_io_num = GPIO_TP_I2C_SCL,
+//         .sda_pullup_en = GPIO_PULLUP_DISABLE,
+//         .scl_pullup_en = GPIO_PULLUP_DISABLE,
+//         .master.clk_speed = I2C_MASTER_FREQ_HZ,
+//     };
 
-    i2c_param_config(i2c_master_port, &conf);
+//     i2c_param_config(i2c_master_port, &conf);
 
-    return i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
-}
+//     return i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
+// }
 
 uint8_t cst816t_init(void)
 {
-    i2c2_master_init();
     uint8_t buf[10];
     cst816t_read_len(0x15, buf, 1);
     vTaskDelay(pdMS_TO_TICKS(10));

@@ -73,7 +73,7 @@ typedef struct
     EventGroupHandle_t Wav_event_group;
     EventGroupHandle_t TianQi_event_group;
 
-    xSemaphoreHandle  https_request_Semaphore;
+    SemaphoreHandle_t  https_request_Semaphore;
 
     // _Weather_Data   Weather_Data[3];
     // _kongqi_Data    kongqi_Data;
