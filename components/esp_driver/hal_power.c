@@ -6,10 +6,10 @@
 #include "system_config.h"
 #include "lv_hint.h"
 #include "hal_ledc.h"
+#include "hal_key.h"
 
 // 假设这些函数和变量在其他文件中定义
-extern int hal_key_read_power_gpio(void);
-extern _system_data system_data;
+// extern _system_data system_data;
 static const char *HALPOWER_TAG = "Hal Power";
 
 void hal_power_on(void)
@@ -23,7 +23,7 @@ void hal_power_off(void)
     gpio_set_level(IO_POWER_PIN, 0);
 }
 
-xSemaphoreHandle hal_power_Semaphore;
+SemaphoreHandle_t hal_power_Semaphore;
 
 void hal_power_send_off(void)
 {

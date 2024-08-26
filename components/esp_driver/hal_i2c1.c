@@ -1,201 +1,125 @@
 #include "hal_i2c1.h"
+#include "driver/i2c.h"
+#include "main.h"
 
-static const char *HALI2C1_TAG = "Hal I2C1";
-void myiic_delay_us(int us)
-{
-	uint32_t time=40*us;
-	while(--time);
+static const char *HALI2C_TAG = "Hal I2C";
 
+static esp_err_t i2c1_master_init(void) {
+	i2c_config_t conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = I2C_MASTER_SDA_IO,
+        .scl_io_num = I2C_MASTER_SCL_IO,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master.clk_speed = I2C_MASTER_FREQ_HZ,
+    };
+
+    i2c_param_config(I2C_MASTER_NUM, &conf);
+
+    return i2c_driver_install(I2C_MASTER_NUM, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
 }
 
-void myiic_delay_ms(int ms)
+void i2c1_init(void)
 {
-	myiic_delay_us(ms*1000);
-}
-
-//初始化IIC
-void IIC_Init(void)
-{
-    //gpio_pad_select_gpio(IIC_SCL_IO);
-    //gpio_pad_select_gpio(IIC_SDA_IO);
-
-	gpio_set_direction(IIC_SDA_IO, GPIO_MODE_OUTPUT);
-	gpio_set_direction(IIC_SCL_IO, GPIO_MODE_OUTPUT);
-	IIC_SCL(1);
-	IIC_SDA(1);
-
-}
-//产生IIC起始信号
-void IIC_Start(void)
-{
-	SDA_OUT();     //sda线输出
-	IIC_SDA(1);
-	IIC_SCL(1);
-	myiic_delay_us(4);
-    IIC_SDA(0);//START:when CLK is high,DATA change form high to low
-	myiic_delay_us(4);
-	IIC_SCL(0);//钳住IIC总线，准备发送或接收数据
-}
-//产生IIC停止信号
-void IIC_Stop(void)
-{
-	SDA_OUT();//sda线输出
-	IIC_SCL(0);
-	IIC_SDA(0);//STOP:when CLK is high DATA change form low to high
-	myiic_delay_us(4);
-	IIC_SCL(1);
-	IIC_SDA(1);//发送IIC总线结束信号
-	myiic_delay_us(4);
-}
-//等待应答信号到来
-//返回值：1，接收应答失败
-//        0，接收应答成功
-uint8_t IIC_Wait_Ack(void)
-{
-	uint16_t ucErrTime=0;
-	SDA_IN();      //SDA设置为输入
-	IIC_SDA(1);
-	myiic_delay_us(1);
-	IIC_SCL(1);
-	myiic_delay_us(1);
-	while(READ_SDA)
-	{
-		ucErrTime++;
-		if(ucErrTime>2500)
-		{
-			IIC_Stop();
-			return 1;
-		}
-	}
-	IIC_SCL(0);//时钟输出0
-	return 0;
-}
-//产生ACK应答
-void IIC_Ack(void)
-{
-	IIC_SCL(0);
-	SDA_OUT();
-	IIC_SDA(0);
-	myiic_delay_us(2);
-	IIC_SCL(1);
-	myiic_delay_us(2);
-	IIC_SCL(0);
-}
-//不产生ACK应答
-void IIC_NAck(void)
-{
-	IIC_SCL(0);
-	SDA_OUT();
-	IIC_SDA(1);
-	myiic_delay_us(2);
-	IIC_SCL(1);
-	myiic_delay_us(2);
-	IIC_SCL(0);
-}
-//IIC发送一个字节
-//返回从机有无应答
-//1，有应答
-//0，无应答
-void IIC_Send_Byte(uint8_t txd)
-{
-    uint8_t t;
-	SDA_OUT();
-    IIC_SCL(0);//拉低时钟开始数据传输
-    for(t=0;t<8;t++)
+    if(i2c1_master_init()==ESP_OK)
     {
-        IIC_SDA((txd&0x80)>>7);
-        txd<<=1;
-		myiic_delay_us(1);   //对TEA5767这三个延时都是必须的
-		IIC_SCL(1);
-		myiic_delay_us(1);
-		IIC_SCL(0);
-		myiic_delay_us(1);
+        log_printf(HALI2C_TAG, LOG_INFO, "i2c1 init success");
+    }else
+    {
+        log_printf(HALI2C_TAG, LOG_ERROR, "i2c1 init failed");
     }
+
 }
-//读1个字节，ack=1时，发送ACK，ack=0，发送nACK
-uint8_t IIC_Read_Byte(uint8_t ack)
-{
-	uint8_t i,receive=0;
-	SDA_IN();//SDA设置为输入
-    for(i=0;i<8;i++ )
-	{
-        IIC_SCL(0);
-        myiic_delay_us(1);
-		IIC_SCL(1);
-        receive<<=1;
-        if(READ_SDA)receive++;
-		myiic_delay_us(1);
+
+esp_err_t hal_i2c_master_write_byte(uint8_t device_addr, uint8_t data_addr, uint8_t data) {
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (device_addr << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, data_addr, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, data, ACK_CHECK_EN);
+    i2c_master_stop(cmd);
+
+    esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_PERIOD_MS);
+    i2c_cmd_link_delete(cmd);
+
+    if (ret != ESP_OK) {
+		log_printf(HALI2C_TAG, LOG_DEBUG, "I2C write byte failed: %s", esp_err_to_name(ret));
     }
-    if (!ack)
-        IIC_NAck();//发送nACK
-    else
-        IIC_Ack(); //发送ACK
-    return receive;
+    return ret;
 }
 
+esp_err_t hal_i2c_master_read_byte(uint8_t device_addr, uint8_t data_addr, uint8_t *data) {
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (device_addr << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, data_addr, ACK_CHECK_EN);
+    i2c_master_stop(cmd);
 
+    esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_PERIOD_MS);
+    if (ret != ESP_OK) {
+		log_printf(HALI2C_TAG, LOG_DEBUG, "I2C write byte failed: %s", esp_err_to_name(ret));
+        i2c_cmd_link_delete(cmd);
+        return ret;
+    }
 
+    cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (device_addr << 1) | I2C_MASTER_READ, ACK_CHECK_EN);
+    i2c_master_read_byte(cmd, data, NACK_VAL);
+    i2c_master_stop(cmd);
 
-uint8_t IIC_read_addr_byte(uint8_t device_addr,uint8_t read_addr)
-{
-	uint8_t dat;
-	IIC_Start();
-	IIC_Send_Byte(device_addr<<1);
-	IIC_Send_Byte(read_addr);
-	IIC_Stop();
+    ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_PERIOD_MS);
+    i2c_cmd_link_delete(cmd);
 
-	IIC_Start();
-	IIC_Send_Byte((device_addr<<1) | 0x01);
-	dat=IIC_Read_Byte(0);
-	IIC_Stop();
-	return(dat);
+    if (ret != ESP_OK) {
+        log_printf(HALI2C_TAG, LOG_DEBUG, "I2C read byte failed: %s", esp_err_to_name(ret));
+    }
+    return ret;
 }
 
-void IIC_read_addr_str(uint8_t device_addr,uint8_t read_addr,uint8_t read_amount,uint8_t *read_buf)
-{
-//	uchar dat;
-	uint8_t i;
-	IIC_Start();
-	IIC_Send_Byte(device_addr<<1);
-	IIC_Send_Byte(read_addr);
-	IIC_Stop();
+esp_err_t hal_i2c_master_read_byte_len(uint8_t device_addr, const uint8_t *reg, uint8_t *data, uint32_t len) {
+    if (len == 0) return ESP_OK;
 
-	IIC_Start();
-	IIC_Send_Byte((device_addr<<1) | 0x01);
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
-	for(i=0;i<read_amount-1;i++)
-		read_buf[i] = IIC_Read_Byte(1);
+    if (reg) {
+        i2c_master_start(cmd);
+        i2c_master_write_byte(cmd, (device_addr << 1) | I2C_MASTER_WRITE, true);
+        i2c_master_write_byte(cmd, *reg, true);
+    }
 
-	read_buf[i] = IIC_Read_Byte(0);
-	IIC_Stop();
+    if (data) {
+        i2c_master_start(cmd);
+        i2c_master_write_byte(cmd, (device_addr << 1) | I2C_MASTER_READ, true);
+        if (len > 1) {
+            i2c_master_read(cmd, data, len - 1, I2C_MASTER_ACK);
+        }
+        i2c_master_read_byte(cmd, data + len - 1, I2C_MASTER_NACK);
+        i2c_master_stop(cmd);
+    }
+
+    esp_err_t err = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_PERIOD_MS);
+    i2c_cmd_link_delete(cmd);
+
+    return err;
 }
 
-
-void IIC_write_addr_byte(uint8_t device_addr,uint8_t write_addr,uint8_t write_dat)
-{
-	IIC_Start();
-	IIC_Send_Byte(device_addr<<1);
-	IIC_Send_Byte(write_addr);
-	IIC_Send_Byte(write_dat);
-	IIC_Stop();
-	myiic_delay_ms(2);
-}
-
-unsigned int IIC_read_addr_int(uint8_t device_addr,uint8_t read_addr)
-{
-	uint8_t read_buf[2];
-	IIC_read_addr_str(device_addr,read_addr,2,read_buf);
-	return (read_buf[0]<<8)|read_buf[1];
-}
-
-void IIC_write_addr_str(uint8_t device_addr,uint8_t write_addr,uint8_t write_amount,uint8_t *write_buf)
-{
-	uint8_t i;
-	IIC_Start();
-	IIC_Send_Byte(device_addr<<1);
-	IIC_Send_Byte(write_addr);
-	for(i=0;i<write_amount;i++)
-		IIC_Send_Byte(write_buf[i]);
-	IIC_Stop();
-	myiic_delay_ms(2);
+esp_err_t hal_i2c_master_write_byte_len(uint8_t device_addr, const uint8_t *reg, uint8_t *data, uint32_t len) {
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, device_addr << 1 | I2C_MASTER_WRITE, true);
+    
+    if (reg) {
+        i2c_master_write_byte(cmd, *reg, true);
+    }
+    
+    if (data) {
+        i2c_master_write(cmd, data, len, true);
+    }
+    
+    i2c_master_stop(cmd);
+    esp_err_t err = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_PERIOD_MS);
+    i2c_cmd_link_delete(cmd);
+    
+    return err;
 }
